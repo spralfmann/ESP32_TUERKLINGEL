@@ -12,6 +12,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <Firebase_ESP_Client.h>
+#include "WiFi.h"
 #include "esp_camera.h"
 #include "soc/soc.h"           
 #include "soc/rtc_cntl_reg.h"  
