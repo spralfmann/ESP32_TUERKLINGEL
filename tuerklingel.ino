@@ -228,8 +228,8 @@ int klingeltaster = 12; // Klingetaster anlegen
 
 void loop(){
    if(digitalRead(klingeltaster) == LOW)
-  {sendMessage();
-    
+  {
+    sendMessage();
     captureSave_photo();
     delay(1);
     if (Firebase.ready())
