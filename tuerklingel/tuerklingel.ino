@@ -28,8 +28,7 @@
 
 // Variablen Definitionen
   // Insert your network credentials
-  #define WIFI_SSID "Kwlan"
-  #define WIFI_PASSWORD "1122334455"
+  
   
   // FCM Deklaration: FIREBASE CLOUD MESSAGING Server Key
   #define FIREBASE_FCM_SERVER_KEY "AAAAAPpPfWI:APA91bFBJZFFdhyuPB7-voUwCWFfBTO7pWEdp3p2N2AFJNyCif0DAnOOVMzLGZqcsL0XCpEd3ieuSw9-MaKIwcE2oo2fCsi2HRCPsMc2AfojkImYv-z5_Mmqo_5c0sQ5aHbJYbsXsVvV"
