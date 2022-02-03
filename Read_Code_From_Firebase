@@ -1,0 +1,12 @@
+if (Firebase.RTDB.getInt(&fbdo, "/test/int"))     // Je nachdem welcher Datentyp, muss getDouble .... geschrieben werden + "/test/int" als Knoten angepasst werden
+{
+  if (fbdo.dataType() == "int")         // auch hier wieder Datentyp anpassen
+  {
+    intValue = fbdo.intData();          // intValue ist Datenwert der von Firebase geschickt wurde
+    Serial.println(intValue);
+  }
+}
+else 
+{
+  Serial.println(fbdo.errorReason());
+}
