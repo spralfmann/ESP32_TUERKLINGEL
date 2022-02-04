@@ -116,15 +116,27 @@ void captureSave_photo( void ) {
   int count = 0;
   bool signupOK = false;
 
+  int intValue;
+  float floatValue;
+
 // Funktionsvordeklarationen
   // FCM Funktion zum Senden einer Nachricht an ein Topic
-  void sendMessage();
+  void sendMessage_klingeltaster();
+  void sendMessage_relais();
+  void sendMessage_tuerkontakt();
+
 
 int klingeltaster = 12; // Klingetaster anlegen
+int tuerkontakt = 13;
+int relais = 15;
+String led_state = "";  
 
 // Initialisierung
   void setup(){
     pinMode(klingeltaster, INPUT); 
+    pinMode(relais, OUTPUT); 
+    pinMode(tuerkontakt, INPUT); 
+    
     // Wifi Netzwerk Verbindungsaufbau
     Serial.begin(115200);
     WiFi.begin(WIFI_SSID,WIFI_PASSWORD);
@@ -230,7 +242,7 @@ int klingeltaster = 12; // Klingetaster anlegen
 void loop(){
    if(digitalRead(klingeltaster) == LOW)
   {
-    sendMessage();
+    sendMessage_klingeltaster();
     captureSave_photo();
     delay(1);
     if (Firebase.ready())
@@ -245,12 +257,27 @@ void loop(){
         Serial.println(fbdo.errorReason());
       }
     }
-    sendMessage();
   }
+  Firebase.RTDB.getInt(&fbdo, "/status/triggeropen");
+  intValue = fbdo.intData();
+  Serial.print("first ");
+  Serial.println(intValue);
+  
+  if (intValue == 1) {
+  
+        Serial.print("second ");
+        Serial.println(intValue);
+       //sendMessage_relais();
+        digitalWrite(relais, HIGH);
+        delay(3000);
+        digitalWrite(relais, LOW);
+        Firebase.RTDB.setInt(&fbdo, "/status/triggeropen", 0);
+    }
+  delay(500);
 }
 
 // Sendet eine Benachrichtigung an den Topic "/topics/ring"
-void sendMessage()
+void sendMessage_klingeltaster()
 {
 
     Serial.print("Send Firebase Cloud Messaging... ");
@@ -278,7 +305,75 @@ void sendMessage()
 
     if (Firebase.FCM.send(&fbdo, &msg)) //send message to recipient
         {
-        Serial.print("Sendung kam an ");
+        Serial.print("Sendung nach Klingeltasterdruck kam an ");
+        Serial.printf("ok\n%s\n\n", Firebase.FCM.payload(&fbdo).c_str());
+        }
+    else
+        Serial.println(fbdo.errorReason());
+
+    count++;
+}
+
+ void sendMessage_relais()
+{
+
+    Serial.print("Send Firebase Cloud Messaging... ");
+
+    //Read more details about legacy HTTP API here https://firebase.google.com/docs/cloud-messaging/http-server-ref
+    FCM_Legacy_HTTP_Message msg;
+
+    msg.targets.to = "/topics/ring";
+
+    msg.options.time_to_live = "1000";
+    msg.options.priority = "high";
+
+    msg.payloads.notification.title = "Test Ring";
+    msg.payloads.notification.body = "der ESP hat geklingelt";
+    msg.payloads.notification.icon = "myicon";
+    msg.payloads.notification.click_action = "OPEN_ACTIVITY_1";
+
+    FirebaseJson payload;
+
+    //all data key-values should be string
+    msg.payloads.data = payload.raw();
+
+    if (Firebase.FCM.send(&fbdo, &msg)) //send message to recipient
+        {
+        Serial.print("Sendung nach Relais kam an ");
+        Serial.printf("ok\n%s\n\n", Firebase.FCM.payload(&fbdo).c_str());
+        }
+    else
+        Serial.println(fbdo.errorReason());
+
+    count++;
+}
+
+  void sendMessage_tuerkontakt()
+{
+
+    Serial.print("Send Firebase Cloud Messaging... ");
+
+    //Read more details about legacy HTTP API here https://firebase.google.com/docs/cloud-messaging/http-server-ref
+    FCM_Legacy_HTTP_Message msg;
+
+    msg.targets.to = "/topics/ring";
+
+    msg.options.time_to_live = "1000";
+    msg.options.priority = "high";
+
+    msg.payloads.notification.title = "Test Ring";
+    msg.payloads.notification.body = "der ESP hat geklingelt";
+    msg.payloads.notification.icon = "myicon";
+    msg.payloads.notification.click_action = "OPEN_ACTIVITY_1";
+
+    FirebaseJson payload;
+
+    //all data key-values should be string
+    msg.payloads.data = payload.raw();
+
+    if (Firebase.FCM.send(&fbdo, &msg)) //send message to recipient
+        {
+        Serial.print("Sendung nach tuerkontakt kam an ");
         Serial.printf("ok\n%s\n\n", Firebase.FCM.payload(&fbdo).c_str());
         }
     else
