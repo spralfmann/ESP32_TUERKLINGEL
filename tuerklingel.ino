@@ -297,10 +297,6 @@ void sendMessage_klingeltaster()
 
     FirebaseJson payload;
 
-    //all data key-values should be string
-    payload.add("temp", "28");
-    payload.add("unit", "celsius");
-    payload.add("timestamp", "1609815454");
     msg.payloads.data = payload.raw();
 
     if (Firebase.FCM.send(&fbdo, &msg)) //send message to recipient
