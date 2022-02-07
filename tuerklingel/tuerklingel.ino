@@ -1,13 +1,4 @@
-/*
-  Rui Santos
-  Complete project details at our blog.
-    - ESP32: https://RandomNerdTutorials.com/esp32-firebase-realtime-database/
-    - ESP8266: https://RandomNerdTutorials.com/esp8266-nodemcu-firebase-realtime-database/
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files.
-  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-  Based in the RTDB Basic Example by Firebase-ESP-Client library by mobizt
-  https://github.com/mobizt/Firebase-ESP-Client/blob/main/examples/RTDB/Basic/Basic.ino
-*/
+// Projekt Türklingel mit ESP32-CAM und Android Java App
 
 #include <Arduino.h>
 #include <WiFi.h>
@@ -21,6 +12,11 @@
 #include <FS.h>
 #include <Firebase_ESP_Client.h>
 
+// Einbinden der eigenen Librarys für Kamera und Wifi Setup
+#include "config.h"
+#include "wifi_setup.h"
+#include "camera_setup.h"
+
 //Provide the token generation process info.
 #include "addons/TokenHelper.h"
 //Provide the RTDB payload printing info and other helper functions.
@@ -28,8 +24,6 @@
 
 // Variablen Definitionen
   // Insert your network credentials
-  #define WIFI_SSID "Kwlan"
-  #define WIFI_PASSWORD "1122334455"
   
   // FCM Deklaration: FIREBASE CLOUD MESSAGING Server Key
   #define FIREBASE_FCM_SERVER_KEY "AAAAAPpPfWI:APA91bFBJZFFdhyuPB7-voUwCWFfBTO7pWEdp3p2N2AFJNyCif0DAnOOVMzLGZqcsL0XCpEd3ieuSw9-MaKIwcE2oo2fCsi2HRCPsMc2AfojkImYv-z5_Mmqo_5c0sQ5aHbJYbsXsVvV"
@@ -50,23 +44,7 @@
   #define IMAGE_PATH "/pictures/Testfoto.jpg"
 
   
-// OV2640 camera module pins (CAMERA_MODEL_AI_THINKER)
-#define PWDN_GPIO_NUM     32
-#define RESET_GPIO_NUM    -1
-#define XCLK_GPIO_NUM      0
-#define SIOD_GPIO_NUM     26
-#define SIOC_GPIO_NUM     27
-#define Y9_GPIO_NUM       35
-#define Y8_GPIO_NUM       34
-#define Y7_GPIO_NUM       39
-#define Y6_GPIO_NUM       36
-#define Y5_GPIO_NUM       21
-#define Y4_GPIO_NUM       19
-#define Y3_GPIO_NUM       18
-#define Y2_GPIO_NUM        5
-#define VSYNC_GPIO_NUM    25
-#define HREF_GPIO_NUM     23
-#define PCLK_GPIO_NUM     22
+
 
 //Define Firebase Data object
   FirebaseData fbdo;
@@ -121,9 +99,7 @@ void captureSave_photo( void ) {
 
 // Funktionsvordeklarationen
   // FCM Funktion zum Senden einer Nachricht an ein Topic
-  void sendMessage_klingeltaster();
-  void sendMessage_relais();
-  void sendMessage_tuerkontakt();
+  void sendMessageFcm();
 
 
 int klingeltaster = 12; // Klingetaster anlegen
@@ -140,15 +116,7 @@ String led_state = "";
     // Wifi Netzwerk Verbindungsaufbau
     Serial.begin(115200);
     WiFi.begin(WIFI_SSID,WIFI_PASSWORD);
-    Serial.print("Connecting to Wi-Fi");
-    while (WiFi.status() != WL_CONNECTED){
-      Serial.print(".");
-      delay(300);
-    }
-    Serial.println();
-    Serial.print("Connected with IP: ");
-    Serial.println(WiFi.localIP());
-    Serial.println();
+    
 
     // EWAUSGABE Firebase Client Infos
     Serial.printf("Firebase Client v%s\n\n", FIREBASE_CLIENT_VERSION);
@@ -175,7 +143,6 @@ String led_state = "";
   
     /* Sign up */
     if (Firebase.signUp(&config, &auth, "", "")){
-      Serial.println("ok");
       signupOK = true;
     }
     else{
@@ -277,7 +244,7 @@ void loop(){
 }
 
 // Sendet eine Benachrichtigung an den Topic "/topics/ring"
-void sendMessage_klingeltaster()
+void sendMessageFcm()
 {
 
     Serial.print("Send Firebase Cloud Messaging... ");
@@ -302,74 +269,6 @@ void sendMessage_klingeltaster()
     if (Firebase.FCM.send(&fbdo, &msg)) //send message to recipient
         {
         Serial.print("Sendung nach Klingeltasterdruck kam an ");
-        Serial.printf("ok\n%s\n\n", Firebase.FCM.payload(&fbdo).c_str());
-        }
-    else
-        Serial.println(fbdo.errorReason());
-
-    count++;
-}
-
- void sendMessage_relais()
-{
-
-    Serial.print("Send Firebase Cloud Messaging... ");
-
-    //Read more details about legacy HTTP API here https://firebase.google.com/docs/cloud-messaging/http-server-ref
-    FCM_Legacy_HTTP_Message msg;
-
-    msg.targets.to = "/topics/ring";
-
-    msg.options.time_to_live = "1000";
-    msg.options.priority = "high";
-
-    msg.payloads.notification.title = "Test Ring";
-    msg.payloads.notification.body = "der ESP hat geklingelt";
-    msg.payloads.notification.icon = "myicon";
-    msg.payloads.notification.click_action = "OPEN_ACTIVITY_1";
-
-    FirebaseJson payload;
-
-    //all data key-values should be string
-    msg.payloads.data = payload.raw();
-
-    if (Firebase.FCM.send(&fbdo, &msg)) //send message to recipient
-        {
-        Serial.print("Sendung nach Relais kam an ");
-        Serial.printf("ok\n%s\n\n", Firebase.FCM.payload(&fbdo).c_str());
-        }
-    else
-        Serial.println(fbdo.errorReason());
-
-    count++;
-}
-
-  void sendMessage_tuerkontakt()
-{
-
-    Serial.print("Send Firebase Cloud Messaging... ");
-
-    //Read more details about legacy HTTP API here https://firebase.google.com/docs/cloud-messaging/http-server-ref
-    FCM_Legacy_HTTP_Message msg;
-
-    msg.targets.to = "/topics/ring";
-
-    msg.options.time_to_live = "1000";
-    msg.options.priority = "high";
-
-    msg.payloads.notification.title = "Test Ring";
-    msg.payloads.notification.body = "der ESP hat geklingelt";
-    msg.payloads.notification.icon = "myicon";
-    msg.payloads.notification.click_action = "OPEN_ACTIVITY_1";
-
-    FirebaseJson payload;
-
-    //all data key-values should be string
-    msg.payloads.data = payload.raw();
-
-    if (Firebase.FCM.send(&fbdo, &msg)) //send message to recipient
-        {
-        Serial.print("Sendung nach tuerkontakt kam an ");
         Serial.printf("ok\n%s\n\n", Firebase.FCM.payload(&fbdo).c_str());
         }
     else

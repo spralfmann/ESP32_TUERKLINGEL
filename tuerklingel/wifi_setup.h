@@ -1,0 +1,2 @@
+// Prototypen Funktionen
+void setupWifiDisplay();
