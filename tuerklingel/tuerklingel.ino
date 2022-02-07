@@ -20,6 +20,7 @@
 #include <SPIFFS.h>
 #include <FS.h>
 #include <Firebase_ESP_Client.h>
+#include "init_wifi.h"
 
 //Provide the token generation process info.
 #include "addons/TokenHelper.h"
@@ -127,15 +128,7 @@ int klingeltaster = 12; // Klingetaster anlegen
     // Wifi Netzwerk Verbindungsaufbau
     Serial.begin(115200);
     WiFi.begin(WIFI_SSID,WIFI_PASSWORD);
-    Serial.print("Connecting to Wi-Fi");
-    while (WiFi.status() != WL_CONNECTED){
-      Serial.print(".");
-      delay(300);
-    }
-    Serial.println();
-    Serial.print("Connected with IP: ");
-    Serial.println(WiFi.localIP());
-    Serial.println();
+    setupwifi();
 
     // EWAUSGABE Firebase Client Infos
     Serial.printf("Firebase Client v%s\n\n", FIREBASE_CLIENT_VERSION);
