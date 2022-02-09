@@ -8,7 +8,7 @@
   Based in the RTDB Basic Example by Firebase-ESP-Client library by mobizt
   https://github.com/mobizt/Firebase-ESP-Client/blob/main/examples/RTDB/Basic/Basic.ino
 */
-
+//#include <IOXhop_FirebaseESP32.h>
 #include <Arduino.h>
 #include <WiFi.h>
 #include <Firebase_ESP_Client.h>
@@ -19,7 +19,6 @@
 #include "driver/rtc_io.h"
 #include <SPIFFS.h>
 #include <FS.h>
-#include <Firebase_ESP_Client.h>
 
 //Provide the token generation process info.
 #include "addons/TokenHelper.h"
@@ -115,8 +114,7 @@ void captureSave_photo( void ) {
   unsigned long sendDataPrevMillis = 0;
   int count = 0;
   bool signupOK = false;
-
-  int intValue;
+  bool boolValue;
   float floatValue;
 
 // Funktionsvordeklarationen
@@ -124,8 +122,9 @@ void captureSave_photo( void ) {
   void sendMessage_klingeltaster();
   void sendMessage_relais();
   void sendMessage_tuerkontakt();
-
-
+  void open_door();
+  bool request_bool(String path);
+    
 int klingeltaster = 12; // Klingetaster anlegen
 int tuerkontakt = 13;
 int relais = 15;
@@ -256,25 +255,38 @@ void loop(){
       else{
         Serial.println(fbdo.errorReason());
       }
-    }
+    } 
   }
-  Firebase.RTDB.getInt(&fbdo, "/status/triggeropen");
-  intValue = fbdo.intData();
+  Firebase.RTDB.getBool(&fbdo, "/status/lockopen");
+  bool boolReturn = fbdo.boolData();
   Serial.print("first ");
-  Serial.println(intValue);
+  Serial.println(boolReturn);
   
-  if (intValue == 1) {
-  
-        Serial.print("second ");
-        Serial.println(intValue);
-       //sendMessage_relais();
+  open_door();
+   
+}
+
+
+bool request_bool(String path)
+{
+  Firebase.RTDB.getBool(&fbdo, "/status/" + path);
+  bool boolReturn = fbdo.boolData();
+  Serial.print("first ");
+  Serial.println(boolReturn);
+  return boolReturn;
+}
+
+
+void open_door()
+{
+      Serial.print("door value: ");
+        Serial.println(boolValue);
         digitalWrite(relais, HIGH);
         delay(3000);
         digitalWrite(relais, LOW);
-        Firebase.RTDB.setInt(&fbdo, "/status/triggeropen", 0);
-    }
-  delay(500);
+        Firebase.RTDB.setBool(&fbdo, "/status/lockopen", 0);
 }
+
 
 // Sendet eine Benachrichtigung an den Topic "/topics/ring"
 void sendMessage_klingeltaster()
@@ -297,6 +309,7 @@ void sendMessage_klingeltaster()
 
     FirebaseJson payload;
 
+    //all data key-values should be string
     msg.payloads.data = payload.raw();
 
     if (Firebase.FCM.send(&fbdo, &msg)) //send message to recipient
@@ -308,9 +321,11 @@ void sendMessage_klingeltaster()
         Serial.println(fbdo.errorReason());
 
     count++;
+    
 }
 
- void sendMessage_relais()
+
+  void sendMessage_relais()
 {
 
     Serial.print("Send Firebase Cloud Messaging... ");
@@ -377,3 +392,7 @@ void sendMessage_klingeltaster()
 
     count++;
 }
+
+
+
+  
